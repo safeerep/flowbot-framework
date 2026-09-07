@@ -1,3 +1,4 @@
+import { UserDetails } from '@/types/admin';
 import mongoose, { Schema, Document } from 'mongoose';
 
 // Lean user profile — one record per real person, keyed by email.
@@ -82,7 +83,7 @@ export async function getUsers(
     skip: number = 0,
     limit: number = 10
 ): Promise<{
-    users: IUser[];
+    users: UserDetails[];
     total: number;
 }> {
 
