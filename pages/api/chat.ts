@@ -159,7 +159,7 @@ export default async function handler(
 
         // TODO: when "New Chat" button is implemented, pass the new sessionId from
         // the frontend so user_histories creates a fresh record for that session.
-        return new Promise((resolve) => {
+        return await new Promise((resolve) => {
             import(`@/configuration/${chatBotId}/server`)
                 .then(async (module) => {
                     const isStreaming = Boolean(module.streaming);
