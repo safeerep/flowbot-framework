@@ -19,30 +19,49 @@ const UserPage = () => {
         setCurrentPage(page);
     };
 
-    const fetchUsers = async (page: number) => {
-        setLoading(true);
-        setError(null);
-        const skip = (page - 1) * USERS_PER_PAGE;
-
-        try {
-            const response = await getAllUsers(skip, USERS_PER_PAGE);
-            if (response?.success === false) {
-                setError(response.errorMessage || 'Failed to fetch users.');
-                return;
-            }
-
-            setUsers(response?.users || []);
-            setTotalNumberOfUsers(response?.total || 0);
-        } catch (error) {
-            console.error('Failed to fetch users:', error);
-            setError('Something went wrong while fetching users.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
     useEffect(() => {
-        fetchUsers(currentPage);
+        const controller = new AbortController();
+        const skip = (currentPage - 1) * USERS_PER_PAGE;
+
+        const fetchUsers = async () => {
+            setLoading(true);
+            setError(null);
+
+            try {
+                const response = await getAllUsers(
+                    skip,
+                    USERS_PER_PAGE,
+                    controller.signal
+                );
+
+                if (response?.success === false) {
+                    setError(
+                        response.errorMessage || 'Failed to fetch users.'
+                    );
+                    return;
+                }
+
+                setUsers(response?.users || []);
+                setTotalNumberOfUsers(response?.total || 0);
+            } catch (error) {
+                if (controller.signal.aborted) {
+                    return;
+                }
+
+                console.error('Failed to fetch users:', error);
+                setError('Something went wrong while fetching users.');
+            } finally {
+                if (!controller.signal.aborted) {
+                    setLoading(false);
+                }
+            }
+        };
+
+        fetchUsers();
+
+        return () => {
+            controller.abort();
+        };
     }, [currentPage]);
 
     return (
@@ -52,6 +71,7 @@ const UserPage = () => {
                     <h1 className="text-xl font-semibold text-slate-900">
                         Users
                     </h1>
+
                     <p className="mt-1 text-sm text-slate-600">
                         View and manage all users of TTT Chatbot.
                     </p>
